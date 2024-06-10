@@ -1,0 +1,119 @@
+controller
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos/7"
+  config.vm.network "private_network", ip: "192.168.1.2"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "1024"
+    vb.cpus = 1
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    sudo yum install epel-release -y
+    sudo yum install ansible -y
+  SHELL
+end
+
+host
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos/7"
+  
+  config.vm.define "slave1" do |slave1|
+    slave1.vm.hostname = "slave1"
+    slave1.vm.network "private_network", ip: "192.168.33.10"
+  end
+  
+  config.vm.define "slave2" do |slave2|
+    slave2.vm.hostname = "slave2"
+    slave2.vm.network "private_network", ip: "192.168.33.11"
+  end
+  config.vm.network "forwarded_port", guest: 80, host: 8080, auto_correct: true
+  config.vm.usable_port_range = (8000..9000)
+end
+
+
+playbook
+
+---
+- name: Install Apache web server
+  hosts: slave1
+  become: true
+  tasks:
+    - name: Install Apache
+      yum:
+        name: httpd
+        state: latest
+    - name: Start Apache
+      service:
+        name: httpd
+        state: started
+        enabled: true
+- name: Install Java on Centos
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Java
+      yum:
+        name: java-1.8.0-openjdk
+        state: present
+
+
+dockerfile --py 
+
+FROM python
+WORKDIR /app
+COPY . .
+CMD ["python3","app.py"]
+
+
+fibonachi series
+
+num = int(input("Enter n for series: "))
+n1, n2 = 0, 1
+print("Fibonacci Series:", n1, n2, end=" ")
+for i in range(2, num):
+    n3 = n1 + n2
+    n1 = n2
+    n2 = n3
+    print(n3, end=" ")
+
+
+dockerfile --java
+
+
+FROM openjdk:21
+WORKDIR /usr/src/app
+COPY . .
+RUN javac prime.java
+ENTRYPOINT ["java","prime"]
+
+
+
+prime java 
+
+import java.util.Scanner;
+public class PrimeNumbers{
+   public static void main(String arg[]){
+      int i,n,counter, j;
+      Scanner scanner = new Scanner(System.in);
+      System.out.println("Required packages have been imported");
+      System.out.println("A reader object has been defined ");
+      System.out.print("Enter the n value : ");
+      n=scanner.nextInt();
+      System.out.print("Prime numbers till "+n+" are : ");
+      for(j=2;j<=n;j++){
+         counter=0;
+         for(i=1;i<=j;i++){
+            if(j%i==0){
+               counter++;
+            }
+         }
+         if(counter==2)
+         System.out.print(j+" ");
+      }
+   }
+}
+
+docker run -it javaimage
